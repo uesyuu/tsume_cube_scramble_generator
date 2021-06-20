@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {
+    Button,
     FormControl,
     InputLabel, makeStyles,
     MenuItem,
@@ -31,15 +32,19 @@ function App() {
     const [scrambleList, setScrambleList] = useState([])
     const [moveCount, setMoveCount] = useState('')
     const [itemCount, setItemCount] = useState('')
+    const [isVisible, setIsVisible] = useState([])
 
     useEffect(() => {
         if (moveCount !== '' && itemCount !== '') {
+            const isVisibleListTmp = []
             const scrambleListTmp = []
             for (let i = 0; i < itemCount; i++) {
-                const scramble = makeScramble(moveCount)
-                scrambleListTmp.push(scramble)
+                const pair = makeScramble(moveCount)
+                scrambleListTmp.push(pair)
+                isVisibleListTmp.push(false)
             }
             setScrambleList(scrambleListTmp)
+            setIsVisible(isVisibleListTmp)
         }
     }, [moveCount, itemCount])
 
@@ -51,6 +56,16 @@ function App() {
         setItemCount(event.target.value)
     }
 
+    const handleButtonChange = (index) => {
+        const isVisibleListTmp = isVisible.slice()
+        if (isVisible[index]) {
+            isVisibleListTmp[index] = false
+        } else {
+            isVisibleListTmp[index] = true
+        }
+        setIsVisible(isVisibleListTmp)
+    }
+
     const makeScramble = (moveCount) => {
         twophase.initialize()
         let shortScramble = ''
@@ -59,7 +74,7 @@ function App() {
             shortScramble = scrambleLib.makeShortScramble(moveCount);
             redundantScramble = inverse.inverse(twophase.solve(shortScramble))
         }
-        return redundantScramble
+        return [shortScramble, redundantScramble]
     }
 
     return (
@@ -93,9 +108,13 @@ function App() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {scrambleList.map((scramble) => (
-                            <TableRow key={scramble}>
-                                <TableCell>{scramble}</TableCell>
+                        {scrambleList.map((scramble, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{scramble[1]}</TableCell>
+                                <TableCell>{
+                                    isVisible[index] && inverse.inverse(scramble[0])
+                                }</TableCell>
+                                <TableCell><Button variant="contained" onClick={() => handleButtonChange(index)}>解答</Button></TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
